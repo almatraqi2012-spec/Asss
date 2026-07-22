@@ -5,7 +5,7 @@ import socketserver
 from telethon import TelegramClient, functions, types as tl_types, errors
 from telethon.tl.functions.channels import JoinChannelRequest, InviteToChannelRequest
 
-# ================= [ ⚙️ الإعدادات المركزية ] ================
+# ================= [ ⚙️ الإعدادات المركزية ] ===============
 BOT_TOKEN = "8774804527:AAHaCMOst4XZVpowd6lw483gsUZuIlHkXlY"
 MY_API_ID = 21349867
 MY_API_HASH = '7ced3ee4c80117bd5138410811b91f9f'
