@@ -17,21 +17,35 @@ REFERRAL_GIFT = 0.05
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode="Markdown")
 user_states = {}
 
+
 # ================= [ 💾 إدارة البيانات ] ================
-    conn.execute('PRAGMA journal_mode=WAL;')      # يحسن بالعمليات والكتابة في نفس الوقت بالهجوم
-    conn.execute('PRAGMA synchronous=NORMAL;')    # يسرع عملية حفظ البيانات بشكل كبير
-    conn.execute('PRAGMA cache_size=10000;')      # يختزن ذاكرة مؤقتة لتسريع الاستجابة
+def init_db():
+    conn = sqlite3.connect("dragon_final_v73.db", timeout=30)
+    conn.execute(
+        "PRAGMA journal_mode=WAL;"
+    )  # يحسن بالعمليات والكتابة في نفس الوقت
+    conn.execute("PRAGMA synchronous=NORMAL;")  # يسرع عملية حفظ البيانات
+    conn.execute("PRAGMA cache_size=10000;")  # يختزن ذاكرة مؤقتة
     # -------------------------------------------
 
-    conn.execute('CREATE TABLE IF NOT EXISTS users (uid INTEGER PRIMARY KEY, balance REAL DEFAULT 0, joined_date TEXT)')
-    conn.execute('CREATE TABLE IF NOT EXISTS accounts (session_name TEXT PRIMARY KEY, status TEXT DEFAULT "active")')
-    conn.execute('CREATE TABLE IF NOT EXISTS memory (target_id TEXT PRIMARY KEY)')
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS users (uid INTEGER PRIMARY KEY, balance REAL DEFAULT 0, joined_date TEXT)"
+    )
+    conn.execute(
+        'CREATE TABLE IF NOT EXISTS accounts (session_name TEXT PRIMARY KEY, status TEXT DEFAULT "active")'
+    )
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS memory (target_id TEXT PRIMARY KEY)"
+    )
     conn.commit()
     return conn
 
+
 def get_db():
-    conn = sqlite3.connect('dragon_final_v73.db', timeout=30)
-    conn.execute('CREATE TABLE IF NOT EXISTS users (uid INTEGER PRIMARY KEY, balance REAL DEFAULT 0.0)')
+    conn = sqlite3.connect("dragon_final_v73.db", timeout=30)
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS users (uid INTEGER PRIMARY KEY, balance REAL DEFAULT 0.0)"
+    )
     return conn
 
 def get_balance(uid):
