@@ -20,34 +20,51 @@ telebot.apihelper.CONNECT_TIMEOUT = 30
 telebot.apihelper.READ_TIMEOUT = 60
 
 # ================= [ 💾 إدارة البيانات ] ================
-def init_db():
-    conn = sqlite3.connect("dragon_final_v73.db", timeout=30)
-    conn.execute(
-        "PRAGMA journal_mode=WAL;"
-    )  # يحسن بالعمليات والكتابة في نفس الوقت
-    conn.execute("PRAGMA synchronous=NORMAL;")  # يسرع عملية حفظ البيانات
-    conn.execute("PRAGMA cache_size=10000;")  # يختزن ذاكرة مؤقتة
-    # -------------------------------------------
+DB_FILE = "dragon_iron.db"  # أو dragon_final_v73.db
 
+
+def get_db():
+    """فتح الاتصال بقاعدة البيانات وتطبيق إعدادات الأداء القوي"""
+    conn = sqlite3.connect(DB_FILE, timeout=60)
+
+    # 🚀 إعدادات السرعة والاستقرار لـ SQLite
+    conn.execute("PRAGMA journal_mode=WAL;")
+    conn.execute("PRAGMA synchronous=NORMAL;")
+    conn.execute("PRAGMA cache_size=-64000;")
+    conn.execute("PRAGMA busy_timeout=10000;")
+
+    # 📦 إنشاء الجداول المعتمدة
     conn.execute(
-        "CREATE TABLE IF NOT EXISTS users (uid INTEGER PRIMARY KEY, balance REAL DEFAULT 0, joined_date TEXT)"
+        """
+        CREATE TABLE IF NOT EXISTS users (
+            uid INTEGER PRIMARY KEY,
+            balance REAL DEFAULT 0.0,
+            joined_date TEXT
+        )
+    """
     )
     conn.execute(
-        'CREATE TABLE IF NOT EXISTS accounts (session_name TEXT PRIMARY KEY, status TEXT DEFAULT "active")'
+        """
+        CREATE TABLE IF NOT EXISTS accounts (
+            session_name TEXT PRIMARY KEY,
+            status TEXT DEFAULT 'active'
+        )
+    """
     )
     conn.execute(
-        "CREATE TABLE IF NOT EXISTS memory (target_id TEXT PRIMARY KEY)"
+        """
+        CREATE TABLE IF NOT EXISTS memory (
+            target_id TEXT PRIMARY KEY
+        )
+    """
     )
+
     conn.commit()
     return conn
 
 
-def get_db():
-    conn = sqlite3.connect("dragon_final_v73.db", timeout=30)
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS users (uid INTEGER PRIMARY KEY, balance REAL DEFAULT 0.0)"
-    )
-    return conn
+# اجعل init_db تشير إلى get_db لكي لا يتعطل الكود إذا كانت مستدعاة في مكان آخر
+init_db = get_db
 
 def get_balance(uid):
     conn = get_db(); res = conn.execute("SELECT balance FROM users WHERE uid=?", (uid,)).fetchone()
@@ -267,6 +284,24 @@ def info(m):
     a = len([f for f in os.listdir('.') if f.startswith(f"sess_{m.chat.id}_")])
     bot.send_message(m.chat.id, f"👤 **حسابك:**\n💰 الرصيد: `{get_balance(m.chat.id)}$` \n📱 الجيش: `{a}`")
 
+@bot.message_handler(commands=['backup'])
+def send_backup(message):
+    if message.from_user.id != ADMIN_ID:
+        return
+
+    try:
+        if os.path.exists(DB_FILE):
+            with open(DB_FILE, "rb") as doc:
+                bot.send_document(
+                    message.chat.id,
+                    doc,
+                    caption="📦 **نسخة احتياطية محلية من قاعدة البيانات.**",
+                )
+        else:
+            bot.reply_to(message, "❌ لم يتم العثور على ملف قاعدة البيانات.")
+    except Exception as e:
+        bot.reply_to(message, f"❌ حدث خطأ أثناء التصدير: {e}")
+        
 if __name__ == '__main__':
     print("🐲 دراجون V73 ينطلق الآن...")
-    bot.infinity_polling()
+    bot.infinity_polling(skip_pending=True, timeout=60, long_polling_timeout=60)
