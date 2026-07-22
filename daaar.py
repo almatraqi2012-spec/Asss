@@ -11,12 +11,13 @@ ADMIN_ID = 6016547718
 
 OXAPAY_KEY = "CE8H0F-ISXBD2-RXHALY-KZXUZU"
 MY_WALLET = "TLtLuhkU2kkkR1Wz1TtrBTpoNRTNviYpsA"
-PRICE_PER_MEMBER = 0.04
-REFERRAL_GIFT = 0.05
+PRICE_PER_MEMBER = 0.05
+REFERRAL_GIFT = 0.007
 
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode="Markdown")
 user_states = {}
-
+telebot.apihelper.CONNECT_TIMEOUT = 30
+telebot.apihelper.READ_TIMEOUT = 60
 
 # ================= [ 💾 إدارة البيانات ] ================
 def init_db():
