@@ -318,7 +318,70 @@ def send_backup(message):
             bot.reply_to(message, "❌ لم يتم العثور على ملف قاعدة البيانات.")
     except Exception as e:
         bot.reply_to(message, f"❌ حدث خطأ أثناء التصدير: {e}")
-        
+# ================= [ 🗑️ إدارة وحذف حسابات الجيش ] ================
+@bot.message_handler(func=lambda m: m.text == "🗑️ حذف حساب")
+def delete_session_menu(m):
+    uid = m.chat.id
+    # البحث عن كل الجلسات التابعة لهذا المستخدم فقط
+    user_sessions = [
+        f
+        for f in os.listdir(".")
+        if f.startswith(f"sess_{uid}_") and f.endswith(".session")
+    ]
+
+    if not user_sessions:
+        return bot.send_message(
+            uid, "❌ **لا توجد لديك أي حسابات مضافة حالياً لحذفها.**"
+        )
+
+    mk = types.InlineKeyboardMarkup(row_width=1)
+    for sess in user_sessions:
+        # استخراج رقم الهاتف من اسم الملف (sess_UID_PHONE.session)
+        phone = sess.replace(f"sess_{uid}_", "").replace(".session", "")
+        mk.add(
+            types.InlineKeyboardButton(
+                f"❌ حذف الرقم: +{phone}", callback_data=f"delsess_{phone}"
+            )
+        )
+
+    bot.send_message(
+        uid,
+        "📱 **اختر الرقم الذي تريد حذفه من البوت لإعادة ربطه:**",
+        reply_markup=mk,
+    )
+
+
+@bot.callback_query_handler(func=lambda c: c.data.startswith("delsess_"))
+def process_delete_session(c):
+    uid = c.message.chat.id
+    phone = c.data.split("_")[1]
+
+    # مسح ملف الجلسة وملف journal إن وجد
+    sess_file = f"sess_{uid}_{phone}.session"
+    journal_file = f"sess_{uid}_{phone}.session-journal"
+
+    deleted = False
+    if os.path.exists(sess_file):
+        os.remove(sess_file)
+        deleted = True
+    if os.path.exists(journal_file):
+        os.remove(journal_file)
+
+    bot.answer_callback_query(c.id)
+
+    if deleted:
+        bot.edit_message_text(
+            f"✅ **تم حذف الرقم `+{phone}` بنجاح.**\nيمكنك الآن إعاده إضافته عبر خيار (➕ إضافة حساب للجيش).",
+            c.message.chat.id,
+            c.message.message_id,
+        )
+    else:
+        bot.edit_message_text(
+            f"⚠️ **الرقم `+{phone}` غير موجود أو تم حذفه سابقاً.**",
+            c.message.chat.id,
+            c.message.message_id,
+    )
+
 if __name__ == '__main__':
     print("🐲 دراجون V73 ينطلق الآن...")
     bot.infinity_polling(skip_pending=True, timeout=60, long_polling_timeout=60)
