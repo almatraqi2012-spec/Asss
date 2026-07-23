@@ -20,7 +20,7 @@ telebot.apihelper.CONNECT_TIMEOUT = 30
 telebot.apihelper.READ_TIMEOUT = 60
 
 # ================= [ 💾 إدارة البيانات ] ================
-DB_FILE = "dragon_iron.db"  # أو dragon_final_v73.db
+DB_FILE = "dragon_final_v73.db"  # أو dragon_final_v73.db
 
 
 def get_db():
