@@ -1,16 +1,18 @@
+import asyncio
 import os
+import random
+import requests
 import sqlite3
 import threading
 import time
-import asyncio
-import requests
-import random
-import zipfile  # 👈 تم فصله في سطر مستقل
+import zipfile
+import telebot  # 👈 تم إضافة استيراد مكتبة telebot هنا
 from telebot import types
-from telethon import TelegramClient, functions, types as tl_types, errors
+from telethon import TelegramClient, errors, functions
+from telethon import types as tl_types
 from telethon.tl.functions.channels import (
-    JoinChannelRequest,
     InviteToChannelRequest,
+    JoinChannelRequest,
 )
 # ================= [ ⚙️ الإعدادات المركزية ] ================
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
