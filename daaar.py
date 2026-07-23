@@ -1,8 +1,17 @@
-import telebot, threading, time, asyncio, requests, random, os, sqlite3
-from telebot import types import zipfile
+import os
+import sqlite3
+import threading
+import time
+import asyncio
+import requests
+import random
+import zipfile  # 👈 تم فصله في سطر مستقل
+from telebot import types
 from telethon import TelegramClient, functions, types as tl_types, errors
-from telethon.tl.functions.channels import JoinChannelRequest, InviteToChannelRequest
-
+from telethon.tl.functions.channels import (
+    JoinChannelRequest,
+    InviteToChannelRequest,
+)
 # ================= [ ⚙️ الإعدادات المركزية ] ================
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 MY_API_ID = 21349867
