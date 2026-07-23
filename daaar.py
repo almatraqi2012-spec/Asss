@@ -20,7 +20,7 @@ telebot.apihelper.CONNECT_TIMEOUT = 30
 telebot.apihelper.READ_TIMEOUT = 60
 
 # ================= [ 💾 إدارة البيانات ] ================
-DB_FILE = "dragon_final_v73.db"  # أو dragon_final_v73.db
+DB_FILE = "dragon_final_v73.db"
 
 
 def get_db():
@@ -63,25 +63,42 @@ def get_db():
     return conn
 
 
-# اجعل init_db تشير إلى get_db لكي لا يتعطل الكود إذا كانت مستدعاة في مكان آخر
+# ربط init_db بنفس الدالة لضمان التوافق
 init_db = get_db
 
+
 def get_balance(uid):
-    conn = get_db(); res = conn.execute("SELECT balance FROM users WHERE uid=?", (uid,)).fetchone()
-    conn.close(); return res[0] if res else 0.0
+    conn = get_db()
+    res = conn.execute(
+        "SELECT balance FROM users WHERE uid=?", (uid,)
+    ).fetchone()
+    conn.close()
+    return res[0] if res else 0.0
+
 
 def update_balance(uid, amt):
-    conn = get_db(); curr = get_balance(uid)
-    conn.execute("INSERT OR REPLACE INTO users VALUES (?, ?)", (uid, round(curr + amt, 2)))
-    conn.commit(); conn.close()
+    conn = get_db()
+    conn.execute(
+        """
+        INSERT INTO users (uid, balance) VALUES (?, ?)
+        ON CONFLICT(uid) DO UPDATE SET balance = round(balance + ?, 2)
+    """,
+        (uid, round(amt, 2), round(amt, 2)),
+    )
+    conn.commit()
+    conn.close()
+
 
 def save_user_memory(user_id):
-    with open('memory.txt', 'a') as f: f.write(str(user_id) + '\n')
+    with open("memory.txt", "a") as f:
+        f.write(str(user_id) + "\n")
+
 
 def get_memory():
-    if not os.path.exists('memory.txt'): return []
-    with open('memory.txt', 'r') as f: return f.read().splitlines()
-
+    if not os.path.exists("memory.txt"):
+        return []
+    with open("memory.txt", "r") as f:
+        return f.read().splitlines()
 # ================= [ ⚔️ محرك سهم V73 - القفز التلقائي ] ================
 async def run_sahm_v73(army, src, trg, total, uid):
     success = 0
