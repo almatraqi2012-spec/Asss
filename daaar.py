@@ -1,5 +1,5 @@
 import telebot, threading, time, asyncio, requests, random, os, sqlite3
-from telebot import types
+from telebot import types import zipfile
 from telethon import TelegramClient, functions, types as tl_types, errors
 from telethon.tl.functions.channels import JoinChannelRequest, InviteToChannelRequest
 
@@ -301,23 +301,47 @@ def info(m):
     a = len([f for f in os.listdir('.') if f.startswith(f"sess_{m.chat.id}_")])
     bot.send_message(m.chat.id, f"👤 **حسابك:**\n💰 الرصيد: `{get_balance(m.chat.id)}$` \n📱 الجيش: `{a}`")
 
+
+
 @bot.message_handler(commands=['backup'])
 def send_backup(message):
     if message.from_user.id != ADMIN_ID:
         return
 
+    backup_zip = "dragon_full_backup.zip"
+
     try:
-        if os.path.exists(DB_FILE):
-            with open(DB_FILE, "rb") as doc:
-                bot.send_document(
-                    message.chat.id,
-                    doc,
-                    caption="📦 **نسخة احتياطية محلية من قاعدة البيانات.**",
-                )
-        else:
-            bot.reply_to(message, "❌ لم يتم العثور على ملف قاعدة البيانات.")
+        # إنشاء ملف مضغوط يجمع قاعدة البيانات + كل حسابات الجلسات (.session)
+        with zipfile.ZipFile(backup_zip, "w", zipfile.ZIP_DEFLATED) as zipf:
+            # 1. إضافة قاعدة البيانات
+            if os.path.exists(DB_FILE):
+                zipf.write(DB_FILE)
+
+            # 2. إضافة كل ملفات الحسابات المضافة (.session)
+            for file in os.listdir("."):
+                if file.endswith(".session"):
+                    zipf.write(file)
+
+        # إرسال الملف المضغوط للأدمن
+        with open(backup_zip, "rb") as doc:
+            bot.send_document(
+                message.chat.id,
+                doc,
+                caption=(
+                    "📦 **نسخة احتياطية شاملة:**\n"
+                    "✅ قاعدة البيانات (الأرصدة والمستخدمين)\n"
+                    "✅ جميع حسابات الجيش المضافة (.session)"
+                ),
+            )
+
+        # حذف الملف المضغوط المؤقت بعد الإرسال
+        if os.path.exists(backup_zip):
+            os.remove(backup_zip)
+
     except Exception as e:
-        bot.reply_to(message, f"❌ حدث خطأ أثناء التصدير: {e}")
+        bot.reply_to(
+            message, f"❌ حدث خطأ أثناء إنشاء النسخة الاحتياطية: {e}"
+        )
 # ================= [ 🗑️ إدارة وحذف حسابات الجيش ] ================
 @bot.message_handler(func=lambda m: m.text == "🗑️ حذف حساب")
 def delete_session_menu(m):
